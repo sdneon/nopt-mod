@@ -1,3 +1,68 @@
+# nopt-mod
+A mod of `nopt` to provide extra, stricter options.
+
+## Extra Options
+```javascript
+nopt(knownOpts, shortHands, commandLineArgs, retainFromIndex, options)
+```
+where:
+```javascript
+    options: {
+        ignoreUnknowns, //DONT'T absorb unknowns, leave them in remain.
+        terminateOnUnknown, //once encounter an unknown, treat like '--' and leave the rest in remain.
+                            //setting this true also sets ignoreUnknowns to true.
+        strictShortHands, //only use declared shorthands, DONT'T accept whole gamut of partial spellings!
+    }
+```
+### Examples
+
+```javascript
+// my-program.js
+var nopt = require("nopt")
+  , Stream = require("stream").Stream
+  , path = require("path")
+  , knownOpts = { include : [String, Array] }
+  , shortHands = { i : ["--include"] }
+  , parsed = nopt(knownOpts, shortHands, process.argv, {
+      ignoreUnknowns: true,
+      strictShortHands: true
+  })
+console.log('include:', parsed.include);
+console.log('remain:', parsed.remain);
+```
+ `{ ignoreUnknowns: true, strictShortHands: false }` gives:
+```javascript
+$ node my-program.js -i validInclude --in=excludeIfStrictShortHand unknownLiteral -unknownFlag --i=afterUnknown unknownLiteral2
+include: [ 'validInclude', 'excludeIfStrictShortHand', 'afterUnknown' ]
+remain: [ 'unknownLiteral', '-unknownFlag', 'unknownLiteral2' ]
+```
+
+---
+ `{ ignoreUnknowns: true, strictShortHands: true }` gives:
+```javascript
+$ node my-program.js -i validInclude --in=excludeIfStrictShortHand unknownLiteral -unknownFlag --i=afterUnknown unknownLiteral2
+include: [ 'validInclude', 'afterUnknown' ]
+remain: [ '--in=excludeIfStrictShortHand', 'unknownLiteral', '-unknownFlag', 'unknownLiteral2' ]
+```
+`strictShortHands` rejects `'--in'` as it is not explicitly defined in `shortHands` (which accepts only `'-i'`).
+
+---
+ `{ terminateOnUnknown: true, strictShortHands: true }` gives:
+```javascript
+$ node my-program.js -i validInclude --in=excludeIfStrictShortHand unknownLiteral -unknownFlag --i=afterUnknown unknownLiteral2
+include: [ 'validInclude' ]
+remain: [ '--in=excludeIfStrictShortHand', 'unknownLiteral', '-unknownFlag', '--i=afterUnknown', 'unknownLiteral2' ]
+```
+`terminateOnUnknown` works as if `--` terminator flag is appended before the 1st unknown encountered, and stops processing the rest of the arguments.
+
+Say when your script is a ***wrapper*** to `webpack`, use `terminateOnUnknown` to **parse for your flags in front**, then ***shelf the rest 'intact'*** to pass to `webpack`. E.g.:
+```javascript
+$ node my-webpack-wrapper.js --my_flag=only_want_this --config app.config.js
+my-webpack-wrapper gets: [my_flag: [ 'only_want_this' ]]
+webpack gets parsed.remain: ['--config', 'app.config.js' ]
+```
+
+# Original Readme
 If you want to write an option parser, and have it be good, there are
 two ways to do it.  The Right Way, and the Wrong Way.
 

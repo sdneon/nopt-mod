@@ -1,8 +1,8 @@
 {
-  "name": "nopt",
+  "name": "nopt-mod",
   "version": "8.1.0",
-  "description": "Option parsing for Node, supporting types, shorthands, etc. Used by npm.",
-  "author": "GitHub Inc.",
+  "description": "Option parsing for Node, supporting types, shorthands, etc. Mod with extra options.",
+  "author": ["GitHub Inc.", "neon"],
   "main": "lib/nopt.js",
   "scripts": {
     "test": "tap",
